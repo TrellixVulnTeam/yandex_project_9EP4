@@ -205,15 +205,19 @@ while running:
             y=player.rect.y
             if event.key == pygame.K_LEFT:
                 player.rect.x -= STEP
+                cursor.rect.x -= STEP
             if event.key == pygame.K_RIGHT:
                 player.rect.x += STEP
+                cursor.rect.x += STEP
             if event.key == pygame.K_UP:
                 player.rect.y -= STEP
+                cursor.rect.y -= STEP
             if event.key == pygame.K_UP and event.key == pygame.K_RIGHT:
                 player.rect.x += STEP
                 player.rect.y -= STEP
             if event.key == pygame.K_DOWN:
                 player.rect.y += STEP
+                cursor.rect.y += STEP
             if pygame.sprite.spritecollideany(player, box_group):
                     player.rect.x=x
                     player.rect.y=y
