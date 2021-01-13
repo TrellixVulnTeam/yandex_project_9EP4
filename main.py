@@ -23,6 +23,7 @@ player_group = pygame.sprite.Group()
 enemys_group = pygame.sprite.Group()
 cursor_group = pygame.sprite.Group()
 
+
 def load_image(name, size=None, color_key=None):
     fullname = os.path.join('data', name)
     try:
@@ -133,6 +134,7 @@ monster_image = load_image('monster.png', (50, 70))
 
 tile_width = tile_height = 80
 
+
 class Cursor(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(cursor_group, all_sprites)
@@ -140,6 +142,7 @@ class Cursor(pygame.sprite.Sprite):
         rect = self.image.get_rect()
         self.rect = pygame.Rect(rect.x, rect.y, 50, 50)
         self.rect.x, self.rect.y = pygame.mouse.get_pos()
+
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
@@ -149,13 +152,14 @@ class Enemy(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
 
     def hit(self, x, y):
-        #print(1, cursor.rect.x, cursor.rect.y, "\n", self.rect.x, self.rect.y, 2)
+        # print(1, cursor.rect.x, cursor.rect.y, "\n", self.rect.x, self.rect.y, 2)
         if x - 100 <= self.rect.x <= x + 200 and y - 100 <= self.rect.y <= y + 200:
             print('aaaaaaaaaaaaaaaaaa')
             self.health -= 10
 
     def die(self):
         self.kill()
+
 
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
@@ -250,7 +254,6 @@ while running:
                     count_dies(enemy_die)
                     print('умерло противников:', enemy_die)
             print("win")
-
 
     camera.update(player)
 
