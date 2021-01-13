@@ -56,6 +56,24 @@ def load_level(filename):
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
 
 
+def count_dies(num):
+    text = 'Врагов убито:'
+    font = pygame.font.Font(None, 30)
+    string_rendered = font.render(text, 1, pygame.Color('black'))
+    intro_rect = string_rendered.get_rect()
+    text_coord = 530
+    intro_rect.top = text_coord
+    intro_rect.x = 10
+    screen.blit(string_rendered, intro_rect)
+    text = str(num)
+    string_rendered = font.render(text, 1, pygame.Color('black'))
+    intro_rect = string_rendered.get_rect()
+    text_coord = 530
+    intro_rect.top = text_coord
+    intro_rect.x = 160
+    screen.blit(string_rendered, intro_rect)
+
+
 def generate_level(level, t):
     new_player, x, y = None, None, None
     for y in range(len(level)):
@@ -191,7 +209,8 @@ player, level_x, level_y = generate_level(load_level("levelex.txt"), T)
 camera = Camera((level_x, level_y))
 cursor = Cursor()
 pygame.mouse.set_visible(False)
-print(tiles_group)
+enemy_die = 0
+count_dies(enemy_die)
 
 running = True
 
@@ -226,7 +245,10 @@ while running:
                 i.hit(player.rect.x, player.rect.y)
                 if i.health <= 0:
                     i.die()
-                    print('winner')
+                    enemy_die += 1
+                    enemys.remove(i)
+                    count_dies(enemy_die)
+                    print('умерло противников:', enemy_die)
             print("win")
 
 
@@ -240,6 +262,7 @@ while running:
     player_group.draw(screen)
     enemys_group.draw(screen)
     cursor_group.draw(screen)
+    count_dies(enemy_die)
 
     pygame.display.flip()
 
