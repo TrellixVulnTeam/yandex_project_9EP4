@@ -48,13 +48,13 @@ def load_level(filename):
     # читаем уровень, убирая символы перевода строки
     with open(filename, 'r') as mapFile:
         level_map = [line.strip() for line in mapFile]
-    repeat_map = [line.replace('@', '.') for line in level_map]
+    repeat_map = [line.replace('.', '*') for line in level_map]
     level_map += repeat_map
     # и подсчитываем максимальную длину
     max_width = WIDTH // tile_width + 1
     # print(list(map(lambda x: x.ljust(max_width, '.'), level_map)))
     # дополняем каждую строку пустыми клетками ('.')
-    return list(map(lambda x: x.ljust(max_width, '.'), level_map))
+    return list(map(lambda x: x.ljust(max_width, '*'), level_map))
 
 
 def count_dies(num):
@@ -84,11 +84,11 @@ def generate_level(level, t):
             elif level[y][x] == '#':
                 Tile('wall', x, y).add(box_group)
             elif level[y][x] == '.' and t == 0:
-                Tile('empty', x, y)
+                Tile('empty', x, y).add(tiles_group)
                 new_player = Player(x, y)
                 t = 1
             elif level[y][x] == '^':
-                Tile('empty', x, y).add(box_group)
+                Tile('empty', x, y).add(tiles_group)
                 enemys.append(Enemy(x, y))
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y
@@ -242,8 +242,8 @@ while running:
                 player.rect.y += STEP
                 cursor.rect.y += STEP
             if pygame.sprite.spritecollideany(player, box_group):
-                    player.rect.x=x
-                    player.rect.y=y
+                    player.rect.x = x
+                    player.rect.y = y
         elif event.type == pygame.MOUSEBUTTONDOWN and pygame.sprite.spritecollideany(cursor, enemys_group):
             for i in enemys:
                 i.hit(player.rect.x, player.rect.y)
