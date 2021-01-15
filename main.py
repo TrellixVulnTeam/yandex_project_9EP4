@@ -22,6 +22,7 @@ box_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 enemys_group = pygame.sprite.Group()
 cursor_group = pygame.sprite.Group()
+btn_group = pygame.sprite.Group()
 
 
 def load_image(name, size=None, color_key=None):
@@ -118,14 +119,31 @@ def start_screen():
         text_coord += intro_rect.height
         screen.blit(string_rendered, intro_rect)
 
+    lev1_image = load_image('уровень 1.png', (228, 60))
+    sprite = pygame.sprite.Sprite()
+    sprite.image = lev1_image
+    sprite.rect = sprite.image.get_rect()
+    sprite.rect.x, sprite.rect.y = 50, 100
+    btn_group.add(sprite)
+
+    btn_group.draw(screen)
+    cursor = Cursor()
+
     while True:
+        cursor.rect.x, cursor.rect.y = pygame.mouse.get_pos()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
-            elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
-                return  # начинаем игру
+            elif event.type == pygame.MOUSEBUTTONDOWN and pygame.sprite.spritecollideany(cursor, btn_group):
+                cursor.kill()
+                return 'levelex.txt'
+        screen.blit(fon, (0, 0))
+        btn_group.draw(screen)
+        cursor_group.draw(screen)
         pygame.display.flip()
         clock.tick(FPS)
+
+
 
 
 tile_images = {'wall': load_image('box.png',(80,80)), 'empty': load_image('grass.png',(80,80))}
@@ -206,10 +224,10 @@ class Camera:
         self.dy = -(target.rect.y + target.rect.h // 2 - HEIGHT // 2)
 
 
-start_screen()
+level_name = start_screen()
 
 T = 0
-player, level_x, level_y = generate_level(load_level("levelex.txt"), T)
+player, level_x, level_y = generate_level(load_level(level_name), T)
 camera = Camera((level_x, level_y))
 cursor = Cursor()
 pygame.mouse.set_visible(False)
