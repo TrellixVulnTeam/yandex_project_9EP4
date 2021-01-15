@@ -22,7 +22,8 @@ box_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 enemys_group = pygame.sprite.Group()
 cursor_group = pygame.sprite.Group()
-btn_group = pygame.sprite.Group()
+btn1_group = pygame.sprite.Group()
+btn2_group = pygame.sprite.Group()
 
 
 def load_image(name, size=None, color_key=None):
@@ -120,13 +121,21 @@ def start_screen():
         screen.blit(string_rendered, intro_rect)
 
     lev1_image = load_image('уровень 1.png', (228, 60))
-    sprite = pygame.sprite.Sprite()
-    sprite.image = lev1_image
-    sprite.rect = sprite.image.get_rect()
-    sprite.rect.x, sprite.rect.y = 50, 100
-    btn_group.add(sprite)
+    lev1 = pygame.sprite.Sprite()
+    lev1.image = lev1_image
+    lev1.rect = lev1.image.get_rect()
+    lev1.rect.x, lev1.rect.y = 50, 100
+    btn1_group.add(lev1)
 
-    btn_group.draw(screen)
+    lev2_image = load_image('уровень 2.png', (228, 60))
+    lev2 = pygame.sprite.Sprite()
+    lev2.image = lev2_image
+    lev2.rect = lev2.image.get_rect()
+    lev2.rect.x, lev2.rect.y = 50, 300
+    btn2_group.add(lev2)
+
+    btn1_group.draw(screen)
+    btn2_group.draw(screen)
     cursor = Cursor()
 
     while True:
@@ -134,19 +143,21 @@ def start_screen():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
-            elif event.type == pygame.MOUSEBUTTONDOWN and pygame.sprite.spritecollideany(cursor, btn_group):
+            elif event.type == pygame.MOUSEBUTTONDOWN and pygame.sprite.spritecollideany(cursor, btn1_group):
                 cursor.kill()
                 return 'levelex.txt'
+            elif event.type == pygame.MOUSEBUTTONDOWN and pygame.sprite.spritecollideany(cursor, btn2_group):
+                cursor.kill()
+                return 'levelex1.txt'
         screen.blit(fon, (0, 0))
-        btn_group.draw(screen)
+        btn1_group.draw(screen)
+        btn2_group.draw(screen)
         cursor_group.draw(screen)
         pygame.display.flip()
         clock.tick(FPS)
 
 
-
-
-tile_images = {'wall': load_image('box.png',(80,80)), 'empty': load_image('grass.png',(80,80))}
+tile_images = {'wall': load_image('box.png', (80, 80)), 'empty': load_image('grass.png', (80, 80))}
 player_image = load_image('mario.png', (50, 70))
 monster_image = load_image('monster.png', (50, 70))
 
@@ -242,8 +253,8 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN:
-            x=player.rect.x
-            y=player.rect.y
+            p_x = player.rect.x
+            p_y = player.rect.y
             if event.key == pygame.K_LEFT:
                 player.rect.x -= STEP
                 cursor.rect.x -= STEP
@@ -253,15 +264,12 @@ while running:
             if event.key == pygame.K_UP:
                 player.rect.y -= STEP
                 cursor.rect.y -= STEP
-            if event.key == pygame.K_UP and event.key == pygame.K_RIGHT:
-                player.rect.x += STEP
-                player.rect.y -= STEP
             if event.key == pygame.K_DOWN:
                 player.rect.y += STEP
                 cursor.rect.y += STEP
             if pygame.sprite.spritecollideany(player, box_group):
-                    player.rect.x = x
-                    player.rect.y = y
+                player.rect.x = p_x
+                player.rect.y = p_y
         elif event.type == pygame.MOUSEBUTTONDOWN and pygame.sprite.spritecollideany(cursor, enemys_group):
             for i in enemys:
                 i.hit(player.rect.x, player.rect.y)
