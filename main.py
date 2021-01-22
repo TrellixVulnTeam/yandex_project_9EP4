@@ -5,11 +5,10 @@ import pygame
 pygame.init()
 pygame.key.set_repeat(200, 70)
 
-FPS = 100
+FPS = 60
 WIDTH = 800
 HEIGHT = 600
 STEP = 50
-
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
@@ -157,8 +156,21 @@ def start_screen():
         clock.tick(FPS)
 
 
+p_images = ['player\\Wraith_01_Moving Forward_001', 'player\\Wraith_01_Moving Forward_002',
+            'player\\Wraith_01_Moving Forward_003', 'player\\Wraith_01_Moving Forward_004',
+            'player\\Wraith_01_Moving Forward_005', 'player\\Wraith_01_Moving Forward_006',
+            'player\\Wraith_01_Moving Forward_007', 'player\\Wraith_01_Moving Forward_008',
+            'player\\Wraith_01_Moving Forward_009', 'player\\Wraith_01_Moving Forward_010',
+            'player\\Wraith_01_Moving Forward_011']
+
+p_attack = ['Wraith_01_Casting Spells_000', 'Wraith_01_Casting Spells_003', 'Wraith_01_Casting Spells_006',
+            'Wraith_01_Casting Spells_009', 'Wraith_01_Casting Spells_012', 'Wraith_01_Casting Spells_015',
+            'Wraith_01_Casting Spells_017']
+
 tile_images = {'wall': load_image('box.png', (80, 80)), 'empty': load_image('grass.png', (80, 80))}
-player_image = load_image('mario.png', (50, 70))
+player_images_r = [load_image(i + '.png', (48, 69)) for i in p_images]
+player_images_l = [load_image(i + '(1).png', (48, 69)) for i in p_images]
+p_attack_images = [load_image('attack\\' + i + '.png', (48, 69)) for i in p_attack]
 monster_image = load_image('monster.png', (50, 70))
 
 tile_width = tile_height = 80
@@ -178,13 +190,21 @@ class Enemy(pygame.sprite.Sprite):
         self.health = 100
         super().__init__(enemys_group, all_sprites)
         self.image = monster_image
+        self.step = 1
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
 
     def hit(self, x, y):
-        # print(1, cursor.rect.x, cursor.rect.y, "\n", self.rect.x, self.rect.y, 2)
         if x - 100 <= self.rect.x <= x + 200 and y - 100 <= self.rect.y <= y + 200:
             print('aaaaaaaaaaaaaaaaaa')
             self.health -= 10
+
+    def go(self):
+        x_step = self.rect.x - player.rect.x
+        y_step = self.rect.y - player.rect.y
+        x_step = x_step if x_step <= self.step else self.step
+        y_step = y_step if y_step <= self.step else self.step
+        self.rect.x -= x_step
+        self.rect.y -= y_step
 
     def die(self):
         self.kill()
@@ -201,8 +221,30 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         print(11111111)
         super().__init__(player_group, all_sprites)
-        self.image = player_image
+        self.directions = player_images_r
+        self.cadr = 0
+        self.image = self.directions[self.cadr]
         self.rect = self.image.get_rect().move(tile_width * pos_x + 15, tile_height * pos_y + 5)
+
+    def animate(self):
+        self.cadr = (self.cadr + 1) % 11
+        self.image = self.directions[self.cadr]
+
+    def change_direction_on_r(self):
+        self.directions = player_images_r
+
+    def change_direction_on_l(self):
+        self.directions = player_images_l
+
+    def attack(self):
+        for i in p_attack_images:
+            print(i)
+            self.image = i
+            screen.fill(pygame.Color(0, 0, 0))
+
+            pygame.display.flip()
+
+            clock.tick(25)
 
 
 class Camera:
@@ -255,10 +297,15 @@ while running:
         elif event.type == pygame.KEYDOWN:
             p_x = player.rect.x
             p_y = player.rect.y
+            player.animate()
             if event.key == pygame.K_LEFT:
+                player.change_direction_on_l()
+                player.animate()
                 player.rect.x -= STEP
                 cursor.rect.x -= STEP
             if event.key == pygame.K_RIGHT:
+                player.change_direction_on_r()
+                player.animate()
                 player.rect.x += STEP
                 cursor.rect.x += STEP
             if event.key == pygame.K_UP:
@@ -273,6 +320,7 @@ while running:
         elif event.type == pygame.MOUSEBUTTONDOWN and pygame.sprite.spritecollideany(cursor, enemys_group):
             for i in enemys:
                 i.hit(player.rect.x, player.rect.y)
+                #player.attack()
                 if i.health <= 0:
                     i.die()
                     enemy_die += 1
@@ -285,6 +333,9 @@ while running:
 
     for sprite in all_sprites:
         camera.apply(sprite)
+
+    # for enemy in enemys_group:
+    #     enemy.go()
 
     screen.fill(pygame.Color(0, 0, 0))
     tiles_group.draw(screen)
