@@ -61,18 +61,35 @@ def load_level(filename):
 def count_dies(num):
     text = 'Врагов убито:'
     font = pygame.font.Font(None, 30)
-    string_rendered = font.render(text, 1, pygame.Color('black'))
+    string_rendered = font.render(text, 1, pygame.Color('white'))
     intro_rect = string_rendered.get_rect()
     text_coord = 530
     intro_rect.top = text_coord
     intro_rect.x = 10
     screen.blit(string_rendered, intro_rect)
     text = str(num)
-    string_rendered = font.render(text, 1, pygame.Color('black'))
+    string_rendered = font.render(text, 1, pygame.Color('white'))
     intro_rect = string_rendered.get_rect()
     text_coord = 530
     intro_rect.top = text_coord
     intro_rect.x = 160
+    screen.blit(string_rendered, intro_rect)
+
+def count_hp(hp):
+    text = 'Здоровья осталось:'
+    font = pygame.font.Font(None, 30)
+    string_rendered = font.render(text, 1, pygame.Color('white'))
+    intro_rect = string_rendered.get_rect()
+    text_coord = 480
+    intro_rect.top = text_coord
+    intro_rect.x = 10
+    screen.blit(string_rendered, intro_rect)
+    text = str(hp)
+    string_rendered = font.render(text, 1, pygame.Color('white'))
+    intro_rect = string_rendered.get_rect()
+    #text_coord = 630
+    intro_rect.top = text_coord
+    intro_rect.x = 220
     screen.blit(string_rendered, intro_rect)
 
 
@@ -168,9 +185,9 @@ p_attack = ['Wraith_01_Casting Spells_000', 'Wraith_01_Casting Spells_003', 'Wra
             'Wraith_01_Casting Spells_017']
 
 tile_images = {'wall': load_image('box.png', (80, 80)), 'empty': load_image('grass.png', (80, 80))}
-player_images_r = [load_image(i + '.png', (48, 69)) for i in p_images]
-player_images_l = [load_image(i + '(1).png', (48, 69)) for i in p_images]
-p_attack_images = [load_image('attack\\' + i + '.png', (48, 69)) for i in p_attack]
+player_images_r = [load_image(i + '.png', (97, 139)) for i in p_images]
+player_images_l = [load_image(i + '(1).png', (97, 139)) for i in p_images]
+p_attack_images = [load_image('attack\\' + i + '.png', (97, 139)) for i in p_attack]
 monster_image = load_image('monster.png', (50, 70))
 
 tile_width = tile_height = 80
@@ -222,13 +239,27 @@ class Player(pygame.sprite.Sprite):
         print(11111111)
         super().__init__(player_group, all_sprites)
         self.directions = player_images_r
+        self.attacking = p_attack_images
         self.cadr = 0
+        self.hp = 200
+        self.is_attack = False
+        self.attack_cadr = 0
         self.image = self.directions[self.cadr]
         self.rect = self.image.get_rect().move(tile_width * pos_x + 15, tile_height * pos_y + 5)
 
     def animate(self):
-        self.cadr = (self.cadr + 1) % 11
-        self.image = self.directions[self.cadr]
+        if self.is_attack and self.attack_cadr < 7:
+            self.image = self.attacking[self.attack_cadr]
+
+        else:
+            self.cadr = (self.cadr + 1) % 11
+            self.image = self.directions[self.cadr]
+        if self.attack_cadr == 7:
+            self.is_attack = False
+            self.attack_cadr = 0
+
+    def go(self):
+        self.is_attack = False
 
     def change_direction_on_r(self):
         self.directions = player_images_r
@@ -237,14 +268,8 @@ class Player(pygame.sprite.Sprite):
         self.directions = player_images_l
 
     def attack(self):
-        for i in p_attack_images:
-            print(i)
-            self.image = i
-            screen.fill(pygame.Color(0, 0, 0))
-
-            pygame.display.flip()
-
-            clock.tick(25)
+        self.is_attack = True
+        self.attack_cadr += 1
 
 
 class Camera:
@@ -295,6 +320,7 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN:
+            player.go()
             p_x = player.rect.x
             p_y = player.rect.y
             player.animate()
@@ -314,20 +340,20 @@ while running:
             if event.key == pygame.K_DOWN:
                 player.rect.y += STEP
                 cursor.rect.y += STEP
-            if pygame.sprite.spritecollideany(player, box_group):
+            if pygame.sprite.spritecollideany(player, box_group) or pygame.sprite.spritecollideany(player, enemys_group):
                 player.rect.x = p_x
                 player.rect.y = p_y
         elif event.type == pygame.MOUSEBUTTONDOWN and pygame.sprite.spritecollideany(cursor, enemys_group):
             for i in enemys:
                 i.hit(player.rect.x, player.rect.y)
-                #player.attack()
+                player.attack()
+                player.animate()
                 if i.health <= 0:
                     i.die()
                     enemy_die += 1
                     enemys.remove(i)
                     count_dies(enemy_die)
                     print('умерло противников:', enemy_die)
-            print("win")
 
     camera.update(player)
 
@@ -343,6 +369,7 @@ while running:
     enemys_group.draw(screen)
     cursor_group.draw(screen)
     count_dies(enemy_die)
+    count_hp(player.hp)
 
     pygame.display.flip()
 
