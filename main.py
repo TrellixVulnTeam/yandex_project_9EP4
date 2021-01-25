@@ -1,6 +1,7 @@
 import os
 import sys
 import pygame
+import time
 
 pygame.init()
 pygame.key.set_repeat(200, 70)
@@ -23,6 +24,33 @@ enemys_group = pygame.sprite.Group()
 cursor_group = pygame.sprite.Group()
 btn1_group = pygame.sprite.Group()
 btn2_group = pygame.sprite.Group()
+
+levels_name = ['levelex.txt', 'levelex1.txt']
+
+def kill_all():
+    for sprite in all_sprites:
+        sprite.kill()
+
+    for sprite in tiles_group:
+        sprite.kill()
+
+    for sprite in box_group:
+        sprite.kill()
+
+    for sprite in player_group:
+        sprite.kill()
+
+    for sprite in enemys_group:
+        sprite.kill()
+
+    for sprite in cursor_group:
+        sprite.kill()
+
+    for sprite in btn1_group:
+        sprite.kill()
+
+    for sprite in btn2_group:
+        sprite.kill()
 
 
 def load_image(name, size=None, color_key=None):
@@ -93,8 +121,13 @@ def count_hp(hp):
     screen.blit(string_rendered, intro_rect)
 
 
-def generate_level(level, t):
+def generate_level(level, t, level_name):
     new_player, x, y = None, None, None
+    with open('data\\enemys.txt') as f:
+        f = list(f)
+        print(level)
+        kolvo = int(f[levels_name.index(level_name)].strip())
+
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '*':
@@ -109,13 +142,32 @@ def generate_level(level, t):
                 Tile('empty', x, y).add(tiles_group)
                 enemys.append(Enemy(x, y))
     # вернем игрока, а также размер поля в клетках
-    return new_player, x, y
+    return new_player, x, y, kolvo
 
 
 def terminate():
     pygame.quit()
     sys.exit()
 
+def win_screen():
+    fon = pygame.transform.scale(load_image('fon.jpg'), (WIDTH, HEIGHT))
+    screen.blit(fon, (0, 0))
+    while True and not W:
+        cursor.rect.x, cursor.rect.y = pygame.mouse.get_pos()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                cursor.kill()
+                W = 1
+        screen.blit(fon, (0, 0))
+        cursor_group.draw(screen)
+        pygame.display.flip()
+        clock.tick(FPS)
+
+def death_screen():
+    fon = pygame.transform.scale(load_image('fon.jpg'), (WIDTH, HEIGHT))
+    screen.blit(fon, (0, 0))
 
 def start_screen():
     intro_text = ["ЗАСТАВКА", "",
@@ -140,14 +192,14 @@ def start_screen():
     lev1 = pygame.sprite.Sprite()
     lev1.image = lev1_image
     lev1.rect = lev1.image.get_rect()
-    lev1.rect.x, lev1.rect.y = 50, 100
+    lev1.rect.x, lev1.rect.y = 50, 50
     btn1_group.add(lev1)
 
     lev2_image = load_image('уровень 2.png', (228, 60))
     lev2 = pygame.sprite.Sprite()
     lev2.image = lev2_image
     lev2.rect = lev2.image.get_rect()
-    lev2.rect.x, lev2.rect.y = 50, 300
+    lev2.rect.x, lev2.rect.y = 50, 150
     btn2_group.add(lev2)
 
     btn1_group.draw(screen)
@@ -172,6 +224,7 @@ def start_screen():
         pygame.display.flip()
         clock.tick(FPS)
 
+SHOOT = pygame.USEREVENT + 1
 
 p_images = ['player\\Wraith_01_Moving Forward_001', 'player\\Wraith_01_Moving Forward_002',
             'player\\Wraith_01_Moving Forward_003', 'player\\Wraith_01_Moving Forward_004',
@@ -185,10 +238,10 @@ p_attack = ['Wraith_01_Casting Spells_000', 'Wraith_01_Casting Spells_003', 'Wra
             'Wraith_01_Casting Spells_017']
 
 tile_images = {'wall': load_image('box.png', (80, 80)), 'empty': load_image('grass.png', (80, 80))}
-player_images_r = [load_image(i + '.png', (97, 139)) for i in p_images]
-player_images_l = [load_image(i + '(1).png', (97, 139)) for i in p_images]
-p_attack_images = [load_image('attack\\' + i + '.png', (97, 139)) for i in p_attack]
-monster_image = load_image('monster.png', (50, 70))
+player_images_r = [load_image(i + '.png', (62, 92)) for i in p_images]
+player_images_l = [load_image(i + '(1).png', (62, 92)) for i in p_images]
+p_attack_images = [load_image('attack\\' + i + '.png', (62, 92)) for i in p_attack]
+monster_image = load_image('monster.png', (92, 92))
 
 tile_width = tile_height = 80
 
@@ -216,12 +269,25 @@ class Enemy(pygame.sprite.Sprite):
             self.health -= 10
 
     def go(self):
-        x_step = self.rect.x - player.rect.x
-        y_step = self.rect.y - player.rect.y
-        x_step = x_step if x_step <= self.step else self.step
-        y_step = y_step if y_step <= self.step else self.step
-        self.rect.x -= x_step
-        self.rect.y -= y_step
+        speed = 1
+        px = player.rect.x
+        py = player.rect.y
+        # Movement x
+        if self.rect.x > px:
+            self.rect.x -= speed
+        elif self.rect.x < px:
+            self.rect.x += speed
+        # Movement y
+        if self.rect.y < py:
+            self.rect.y += speed
+        elif self.rect.y > py:
+            self.rect.y -= speed
+
+    def hit_player(self):
+        if pygame.sprite.spritecollideany(player, enemys_group):
+            pygame.time.set_timer(SHOOT, 1)
+        else:
+            pygame.time.set_timer(SHOOT, 0)
 
     def die(self):
         self.kill()
@@ -305,12 +371,13 @@ class Camera:
 level_name = start_screen()
 
 T = 0
-player, level_x, level_y = generate_level(load_level(level_name), T)
+player, level_x, level_y, kolvo = generate_level(load_level(level_name), T, level_name)
 camera = Camera((level_x, level_y))
 cursor = Cursor()
 pygame.mouse.set_visible(False)
 enemy_die = 0
 count_dies(enemy_die)
+W = 0
 
 running = True
 
@@ -319,6 +386,8 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif pygame.event.get(SHOOT):
+            player.hp -= 5
         elif event.type == pygame.KEYDOWN:
             player.go()
             p_x = player.rect.x
@@ -340,9 +409,23 @@ while running:
             if event.key == pygame.K_DOWN:
                 player.rect.y += STEP
                 cursor.rect.y += STEP
-            if pygame.sprite.spritecollideany(player, box_group) or pygame.sprite.spritecollideany(player, enemys_group):
+            if pygame.sprite.spritecollideany(player, box_group):
                 player.rect.x = p_x
                 player.rect.y = p_y
+
+            if event.key == pygame.K_RETURN or W:
+
+                kill_all()
+
+                level_name = start_screen()
+                T = 0
+                player, level_x, level_y = generate_level(load_level(level_name), T)
+                camera = Camera((level_x, level_y))
+                cursor = Cursor()
+                pygame.mouse.set_visible(False)
+                enemy_die = 0
+                count_dies(enemy_die)
+
         elif event.type == pygame.MOUSEBUTTONDOWN and pygame.sprite.spritecollideany(cursor, enemys_group):
             for i in enemys:
                 i.hit(player.rect.x, player.rect.y)
@@ -357,11 +440,21 @@ while running:
 
     camera.update(player)
 
+    print(enemy_die, kolvo,  player.hp)
+
+    if player.hp < 0:
+        death_screen()
+
+    if enemy_die >= kolvo:
+        win_screen()
+
+
     for sprite in all_sprites:
         camera.apply(sprite)
 
-    # for enemy in enemys_group:
-    #     enemy.go()
+    for enemy in enemys_group:
+        enemy.go()
+        enemy.hit_player()
 
     screen.fill(pygame.Color(0, 0, 0))
     tiles_group.draw(screen)
