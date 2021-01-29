@@ -341,7 +341,7 @@ class Enemy(pygame.sprite.Sprite):
     def change_direction_on_r(self):
         self.directions = e_images_r
 
-    # изменение направления врага на левое
+    # изменение направлени  я врага на левое
     def change_direction_on_l(self):
         self.directions = e_images_l
 
